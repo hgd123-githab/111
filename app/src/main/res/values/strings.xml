@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">shareplatform</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+
+    <string name="toolbar_description">主界面标题栏</string>
+    <string name="tab_layout_description">切换首页和我的分享标签页</string>
+    <string name="view_pager_description">分享内容浏览区域</string>
+    <string name="fab_description">发布新分享</string>
+</resources>
