@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,6 +21,7 @@ import com.example.shareplatform.viewmodel.AuthViewModel;
 public class LoginActivity extends AppCompatActivity {
     private EditText etPhone, etPassword;
     private Button btnLogin;
+    private TextView tvRegister; // 添加注册账号的 TextView
     private AuthViewModel authViewModel;
 
     @Override
@@ -36,8 +38,10 @@ public class LoginActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.et_phone);
         etPassword = findViewById(R.id.et_password);
         btnLogin = findViewById(R.id.btn_login);
+        tvRegister = findViewById(R.id.tv_register); // 初始化注册账号的 TextView
 
         btnLogin.setOnClickListener(v -> login());
+        tvRegister.setOnClickListener(v -> navigateToRegisterActivity()); // 设置点击事件
     }
 
     private void login() {
@@ -70,10 +74,13 @@ public class LoginActivity extends AppCompatActivity {
 
     private void navigateToMainActivity() {
         Intent intent = new Intent(this, MainActivity.class);
-        // 关键：使用FLAG_ACTIVITY_NEW_TASK和FLAG_ACTIVITY_CLEAR_TASK清理栈
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
-        // 结束当前登录活动
         finish();
+    }
+
+    private void navigateToRegisterActivity() {
+        Intent intent = new Intent(this, RegisterActivity.class);
+        startActivity(intent);
     }
 }
