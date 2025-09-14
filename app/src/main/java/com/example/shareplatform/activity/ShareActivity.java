@@ -47,6 +47,15 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);
 
+        View btnBack = findViewById(R.id.btn_back);
+        // 设置返回点击事件
+        btnBack.setOnClickListener(v -> {
+            // 返回主页（MainActivity），关闭当前页面
+            Intent intent = new Intent(ShareActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
+        });
+        
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         if (!authViewModel.isLoggedIn()) {
             navigateToLoginActivity();

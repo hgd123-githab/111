@@ -5,6 +5,16 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- 顶部返回按钮 -->
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_keyboard_return_24"
+        android:contentDescription="返回主页"
+        android:padding="8dp"
+        android:background="@android:color/transparent"/>
+
     <EditText
         android:id="@+id/et_content"
         android:layout_width="match_parent"
@@ -13,7 +23,8 @@
         android:gravity="top"
         android:padding="12dp"
         android:background="@android:color/white"
-        android:elevation="2dp"/>
+        android:elevation="2dp"
+        android:layout_marginTop="12dp"/>
 
     <LinearLayout
         android:id="@+id/image_container"
