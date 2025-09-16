@@ -10,10 +10,11 @@
         android:id="@+id/tv_my_share_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="我的分享"
+        android:text="个人中心"
         android:textSize="20sp"
         android:textStyle="bold"
         android:padding="16dp"
+        android:gravity="center"
         android:background="#F5F5F5" />
 
     <!-- 中间内容区（进度条） -->

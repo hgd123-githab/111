@@ -56,10 +56,6 @@ public class ShareViewModel extends AndroidViewModel {
     }
 
 
-    public MutableLiveData<Resource<List<Share>>> getMySharesLiveData() {
-        return mySharesLiveData;
-    }
-
     public void share(String content, List<Uri> imageUris) {
         shareLiveData.setValue(new Resource.Loading<>(null));
 
