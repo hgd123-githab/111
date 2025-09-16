@@ -9,15 +9,33 @@
     android:layout_marginBottom="8dp"
     android:elevation="2dp">
 
-
-    <TextView
-        android:id="@+id/tv_username"
+    <!-- 新增水平布局，包含头像和用户名 -->
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="#333333"
-        android:layout_marginTop="2dp"/>
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- 用户头像 -->
+        <ImageView
+            android:id="@+id/iv_user_avatar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/baseline_person_24"
+            android:contentDescription="用户头像"
+            android:background="@drawable/shape_avatar"
+            android:scaleType="centerCrop"
+            android:layout_marginEnd="8dp"/>
+
+        <TextView
+            android:id="@+id/tv_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
 
     <TextView
         android:id="@+id/tv_content"
@@ -70,29 +88,6 @@
 
                 <TextView
                     android:id="@+id/tv_like_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="12sp"
-                    android:textColor="#999999"
-                    android:layout_marginStart="4dp"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginStart="16dp">
-
-                <ImageView
-                    android:id="@+id/iv_comment"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_comment_24"
-                    android:contentDescription="评论"/>
-
-                <TextView
-                    android:id="@+id/tv_comment_count"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="0"
