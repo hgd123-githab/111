@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 按压状态：颜色加重（浅灰色，模拟点击反馈） -->
+    <item android:state_pressed="true">
+        <color android:color="#E8E8E8" /> <!-- 比默认白色深一点的灰色，视觉上“加重” -->
+    </item>
+    <!-- 默认状态：原白色背景 -->
+    <item>
+        <color android:color="@android:color/white" />
+    </item>
+</selector>

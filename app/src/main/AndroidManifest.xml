@@ -18,6 +18,12 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".activity.Personshow"
+            android:exported="false" />
+        <activity
+            android:name=".activity.PersonalInformation"
+            android:exported="false" />
+        <activity
             android:name=".activity.show"
             android:exported="false" />
         <activity

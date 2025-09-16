@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -13,11 +14,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.shareplatform.R;
 import com.example.shareplatform.activity.LoginActivity;
+import com.example.shareplatform.activity.PersonalInformation;
+import com.example.shareplatform.activity.Personshow;
 import com.example.shareplatform.util.Resource;
 import com.example.shareplatform.viewmodel.AuthViewModel;
 
@@ -25,6 +27,8 @@ public class MySharesFragment extends Fragment {
     private ProgressBar progressBar;
     private AuthViewModel authViewModel;
     private Button logoutBtn;
+    private LinearLayout myInfoLayout;
+    private LinearLayout myShareLayout; // 新增：声明"我的分享"控件
 
     @Nullable
     @Override
@@ -37,18 +41,38 @@ public class MySharesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
         setupObservers();
+        setupMyInfoClick();
+        setupMyShareClick();
     }
 
 
     private void initViews(View view) {
         progressBar = view.findViewById(R.id.progress_bar);
         logoutBtn = view.findViewById(R.id.btn_logout);
+        myInfoLayout = view.findViewById(R.id.ll_my_info);
+        myShareLayout = view.findViewById(R.id.ll_my_share);
+
         logoutBtn.setOnClickListener(v -> showLogoutDialog());
     }
 
     private void setupObservers() {
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+    }
 
+
+    private void setupMyInfoClick() {
+        myInfoLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), PersonalInformation.class);
+            startActivity(intent);
+        });
+    }
+
+    // 新增："我的分享"点击跳转逻辑（跳转到PersonShowActivity）
+    private void setupMyShareClick() {
+        myShareLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(requireContext(), Personshow.class);
+            startActivity(intent);
+        });
     }
 
     private void showLogoutDialog() {
