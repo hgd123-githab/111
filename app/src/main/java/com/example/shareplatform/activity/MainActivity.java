@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initViews() {
+
         btnHome = findViewById(R.id.btn_home);
         btnShare = findViewById(R.id.fab);
         btnMine = findViewById(R.id.btn_mine);

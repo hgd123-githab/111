@@ -17,4 +17,5 @@ public class show extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
     }
+
 }

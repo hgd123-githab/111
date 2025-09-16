@@ -25,6 +25,7 @@ public class RegisterResponse {
         this.data = data;
     }
 
+
     // 将内部类改为public访问权限
     public static class RegisterData {
         private int user_id;

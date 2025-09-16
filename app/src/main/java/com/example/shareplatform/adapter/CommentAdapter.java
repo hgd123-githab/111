@@ -32,6 +32,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
         public CommentViewHolder(@NonNull View itemView) {
             super(itemView);
+
             // 绑定子项布局的控件ID
             tvCommentUsername = itemView.findViewById(R.id.tv_comment_username);
             tvCommentContent = itemView.findViewById(R.id.tv_comment_content);

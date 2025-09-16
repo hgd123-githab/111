@@ -25,6 +25,7 @@
         android:inputType="phone"
         android:padding="12dp" />
 
+
     <EditText
         android:id="@+id/et_password"
         android:layout_width="match_parent"

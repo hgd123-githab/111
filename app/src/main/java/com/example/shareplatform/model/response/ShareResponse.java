@@ -21,6 +21,7 @@ public class ShareResponse {
         this.msg = msg;
     }
 
+
     public int getShare_id() {
         return share_id;
     }

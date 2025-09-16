@@ -17,6 +17,7 @@
         android:textStyle="bold"
         android:textColor="#333333"/>
 
+
     <!-- 评论文字（与用户名左对齐） -->
     <TextView
         android:id="@+id/tv_comment_content"

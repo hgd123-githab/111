@@ -14,6 +14,7 @@ public class User {
     // Getters and Setters
     public int getUid() { return uid; }
     public void setUid(int uid) { this.uid = uid; }
+
     public String getPho() { return pho; }
     public void setPho(String pho) { this.pho = pho; }
     public String getName() { return name; }

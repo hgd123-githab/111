@@ -31,6 +31,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         return new ShareViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(ShareViewHolder holder, int position) {
         Share share = shares.get(position);

@@ -10,6 +10,7 @@ public class Share {
     private List<String> images;
 
     public Share() {
+
     }
 
     public Share(int sid, int uid, String content, String create_time, List<String> images) {

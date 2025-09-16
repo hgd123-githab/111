@@ -24,4 +24,5 @@ public class LoginResponse {
     public void setUid(int uid) {
         this.uid = uid;
     }
+
 }

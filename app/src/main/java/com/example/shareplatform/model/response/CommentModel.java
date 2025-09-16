@@ -14,6 +14,7 @@ public class CommentModel {
 
     // Getter方法（供适配器获取数据）
     public String getUsername() { return username; }
+
     public String getContent() { return content; }
     public String getTime() { return time; }
 }

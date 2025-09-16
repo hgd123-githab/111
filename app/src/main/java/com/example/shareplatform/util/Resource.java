@@ -25,6 +25,7 @@ public abstract class Resource<T> {
         }
     }
 
+
     public static class Error<T> extends Resource<T> {
         private String message;
         private T data;

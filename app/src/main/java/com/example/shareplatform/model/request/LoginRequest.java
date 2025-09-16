@@ -12,6 +12,7 @@ public class LoginRequest {
     // Getters and Setters
     public String getPho() { return pho; }
     public void setPho(String pho) { this.pho = pho; }
+
     public String getPwd() { return pwd; }
     public void setPwd(String pwd) { this.pwd = pwd; }
 }

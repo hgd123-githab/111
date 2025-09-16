@@ -39,6 +39,7 @@ public class MySharesFragment extends Fragment {
         setupObservers();
     }
 
+
     private void initViews(View view) {
         progressBar = view.findViewById(R.id.progress_bar);
         logoutBtn = view.findViewById(R.id.btn_logout);

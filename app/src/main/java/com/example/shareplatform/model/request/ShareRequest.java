@@ -17,6 +17,7 @@ public class ShareRequest {
         this.uid = uid;
     }
 
+
     public String getContent() {
         return content;
     }

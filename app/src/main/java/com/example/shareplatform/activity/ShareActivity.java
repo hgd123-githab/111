@@ -43,6 +43,7 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
     private static final int PERMISSION_REQUEST_CODE = 101;
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_share);

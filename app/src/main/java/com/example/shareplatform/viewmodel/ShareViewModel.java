@@ -55,6 +55,7 @@ public class ShareViewModel extends AndroidViewModel {
         return sharesLiveData;
     }
 
+
     public MutableLiveData<Resource<List<Share>>> getMySharesLiveData() {
         return mySharesLiveData;
     }

@@ -41,6 +41,7 @@ public class AuthViewModel extends AndroidViewModel {
         registerLiveData = new MutableLiveData<>();
     }
 
+
     // 登录相关
     public LiveData<Resource<LoginResponse>> getLoginLiveData() {
         return loginLiveData;
