@@ -3,12 +3,11 @@ package com.example.shareplatform.network;
 import com.example.shareplatform.model.Share;
 import com.example.shareplatform.model.request.LoginRequest;
 import com.example.shareplatform.model.request.RegisterRequest;
+import com.example.shareplatform.model.response.LikeResponse;
 import com.example.shareplatform.model.response.LoginResponse;
 import com.example.shareplatform.model.response.RegisterResponse;
 import com.example.shareplatform.model.response.ShareResponse;
-
 import java.util.List;
-
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -39,9 +38,7 @@ public interface ApiService {
             @Part List<MultipartBody.Part> images
     );
 
-
     // 获取所有分享接口
-
     @GET("shares")
     Call<List<Share>> getShares();
 
@@ -52,4 +49,22 @@ public interface ApiService {
     // 访问图片接口（新增）
     @GET("image/{uid}/{filename}")
     Call<ResponseBody> getImage(@Path("uid") String uid, @Path("filename") String filename);
+
+    // 1. 点赞接口：返回LikeResponse（不再是ResponseBody）
+    @POST("like")
+    Call<LikeResponse> likeShare(@Body RequestBody request);
+
+    // 2. 取消点赞接口：返回LikeResponse（不再是ResponseBody）
+    @POST("unlike")
+    Call<LikeResponse> unlikeShare(@Body RequestBody request);
+
+    // 3. 检查是否点赞接口（不变，后端返回{"is_liked":true/false}）
+    @GET("like/check")
+    Call<ResponseBody> checkLike(@Query("uid") int uid, @Query("sid") int sid);
+    @Multipart
+    @POST("/user/avatar")
+    Call<ResponseBody> uploadAvatar(
+            @Part("uid") RequestBody uid,
+            @Part MultipartBody.Part avatar
+    );
 }

@@ -28,7 +28,7 @@ public class MySharesFragment extends Fragment {
     private AuthViewModel authViewModel;
     private Button logoutBtn;
     private LinearLayout myInfoLayout;
-    private LinearLayout myShareLayout; // 新增：声明"我的分享"控件
+    private LinearLayout myShareLayout;
 
     @Nullable
     @Override
@@ -45,7 +45,6 @@ public class MySharesFragment extends Fragment {
         setupMyShareClick();
     }
 
-
     private void initViews(View view) {
         progressBar = view.findViewById(R.id.progress_bar);
         logoutBtn = view.findViewById(R.id.btn_logout);
@@ -59,7 +58,6 @@ public class MySharesFragment extends Fragment {
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
     }
 
-
     private void setupMyInfoClick() {
         myInfoLayout.setOnClickListener(v -> {
             Intent intent = new Intent(requireContext(), PersonalInformation.class);
@@ -67,10 +65,12 @@ public class MySharesFragment extends Fragment {
         });
     }
 
-    // 新增："我的分享"点击跳转逻辑（跳转到PersonShowActivity）
     private void setupMyShareClick() {
         myShareLayout.setOnClickListener(v -> {
+            // 获取当前登录用户ID
+            int userId = authViewModel.getUserId();
             Intent intent = new Intent(requireContext(), Personshow.class);
+            intent.putExtra("userId", userId);
             startActivity(intent);
         });
     }

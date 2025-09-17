@@ -54,6 +54,7 @@ public class LoginActivity extends AppCompatActivity {
         }
 
         authViewModel.login(phone, password);
+
     }
 
     private void setupObservers() {
@@ -69,7 +70,9 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, ((Resource.Error<LoginResponse>) resource).getMessage(), Toast.LENGTH_SHORT).show();
                 }
             }
+
         });
+
     }
 
     private void navigateToMainActivity() {

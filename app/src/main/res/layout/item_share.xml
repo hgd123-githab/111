@@ -9,14 +9,13 @@
     android:layout_marginBottom="8dp"
     android:elevation="2dp">
 
-    <!-- 新增水平布局，包含头像和用户名 -->
+    <!-- 用户头像和用户名区域 -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
 
-        <!-- 用户头像 -->
         <ImageView
             android:id="@+id/iv_user_avatar"
             android:layout_width="40dp"
@@ -52,6 +51,7 @@
         android:layout_marginTop="6dp"
         android:orientation="horizontal"/>
 
+    <!-- 时间和交互区域 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -74,27 +74,20 @@
             android:orientation="horizontal"
             android:gravity="end">
 
-            <LinearLayout
+            <!-- 点赞区域（优化点击响应） -->
+            <Button
+                android:id="@+id/btn_like"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/iv_like"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_favorite_border_24"
-                    android:contentDescription="点赞"/>
-
-                <TextView
-                    android:id="@+id/tv_like_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="12sp"
-                    android:textColor="#999999"
-                    android:layout_marginStart="4dp"/>
-            </LinearLayout>
+                android:backgroundTint="@android:color/transparent"
+            android:drawableStart="@drawable/baseline_favorite_border_24"
+            android:drawablePadding="4dp"
+            android:text="0"
+            android:textSize="12sp"
+            android:padding="4dp"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:contentDescription="点赞按钮"/>
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>
