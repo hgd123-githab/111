@@ -10,37 +10,41 @@ public class Share {
     private String content;
     private String create_time;
     private List<String> images;
-    private  String name;
-    // 关键：添加@SerializedName注解，映射后端的like_count字段
+    private String name;
+
+    // 关键修改：使用@SerializedName匹配后端返回的user_avatar字段
+    @SerializedName("user_avatar")
+    private String avatarUrl;
+
     @SerializedName("like_count")
     private int likeCount;
 
     // 空构造函数（必须保留，Gson解析需要）
-
     public Share() {}
-    // 带参构造函数（可选，按需保留）
-    public Share(int sid, int uid, String content, String create_time, List<String> images, int likeCount) {
+
+    // 带参构造函数
+    public Share(int sid, int uid, String content, String create_time, List<String> images,
+                 int likeCount, String name, String avatarUrl) {
         this.sid = sid;
         this.uid = uid;
         this.content = content;
         this.create_time = create_time;
         this.images = images;
-        this.likeCount = likeCount; // 补充likeCount参数
-        this.name = name;
-    }
-
-
-
-
-    // 新增点赞数的getter和setter方法
-    public int getLikeCount() {
-        return likeCount;
-    }
-
-    public void setLikeCount(int likeCount) {
         this.likeCount = likeCount;
+        this.name = name;
+        this.avatarUrl = avatarUrl;
     }
 
+    // 头像URL的getter和setter方法
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    // 其他原有getter和setter方法（保持不变）
     public int getSid() {
         return sid;
     }
@@ -87,5 +91,13 @@ public class Share {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
     }
 }

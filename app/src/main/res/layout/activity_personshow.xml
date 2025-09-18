@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
-    android:padding="16dp">
+    android:orientation="vertical">
 
-    <!-- 直接引用你的列表项布局 -->
-    <include layout="@layout/item_share"/>
+    <!-- 头像控件：ID必须为 iv_user_avatar -->
+    <ImageView
+        android:id="@+id/iv_user_avatar"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/baseline_person_24" />
 
-</ScrollView>
+    <!-- 分享列表 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView_shares"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp" />
+
+</LinearLayout>

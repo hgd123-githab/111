@@ -216,10 +216,7 @@ public class ImagePreviewActivity extends AppCompatActivity {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             showSaveError();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showSaveError();
-        } finally {
+        }  finally {
             try {
                 if (outputStream != null) {
                     outputStream.close();

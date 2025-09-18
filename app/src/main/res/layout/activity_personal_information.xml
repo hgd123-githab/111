@@ -20,19 +20,20 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 用户头像 -->
+    <!-- 头像控件 -->
+
+
     <ImageView
         android:id="@+id/iv_user_avatar"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
-        android:contentDescription="用户头像"
-        android:scaleType="centerCrop"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
         android:src="@drawable/baseline_person_24"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintVertical_bias="0.3" />
+        tools:layout_editor_absoluteX="131dp"
+        tools:layout_editor_absoluteY="75dp" />
 
-    <!-- 内容容器 -->
     <LinearLayout
         android:id="@+id/info_container"
         android:layout_width="match_parent"
@@ -111,15 +112,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 选择头像按钮（修复约束问题） -->
-    <Button
-        android:id="@+id/btn_change_avatar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="选择头像"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/info_container" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

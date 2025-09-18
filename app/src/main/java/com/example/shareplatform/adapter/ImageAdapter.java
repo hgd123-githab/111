@@ -49,7 +49,7 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         String imageUrl = imageUrls.get(position);
         Context loadContext = context != null ? context : holder.itemView.getContext();
-        String fullUrl = "http://10.34.86.144:5190" + imageUrl;
+        String fullUrl = "http://10.34.2.227:5190" + imageUrl;
 
         Glide.with(loadContext)
                 .load(fullUrl)

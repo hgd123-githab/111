@@ -3,6 +3,7 @@ package com.example.shareplatform.network;
 import com.example.shareplatform.model.Share;
 import com.example.shareplatform.model.request.LoginRequest;
 import com.example.shareplatform.model.request.RegisterRequest;
+import com.example.shareplatform.model.response.AvatarUploadResponse;
 import com.example.shareplatform.model.response.LikeResponse;
 import com.example.shareplatform.model.response.LoginResponse;
 import com.example.shareplatform.model.response.RegisterResponse;
@@ -61,10 +62,16 @@ public interface ApiService {
     // 3. 检查是否点赞接口（不变，后端返回{"is_liked":true/false}）
     @GET("like/check")
     Call<ResponseBody> checkLike(@Query("uid") int uid, @Query("sid") int sid);
+    // 关键修复：返回值改为 Call<AvatarUploadResponse>（原可能是 Call<ResponseBody>）
+
     @Multipart
     @POST("/user/avatar")
-    Call<ResponseBody> uploadAvatar(
+    Call<AvatarUploadResponse> uploadAvatar(
             @Part("uid") RequestBody uid,
             @Part MultipartBody.Part avatar
     );
+
+
+
+
 }

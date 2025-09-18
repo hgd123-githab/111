@@ -1,13 +1,14 @@
 package com.example.shareplatform.adapter;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -15,6 +16,8 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.shareplatform.R;
 import com.example.shareplatform.model.Share;
 import com.example.shareplatform.model.response.LikeResponse;
@@ -27,7 +30,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -44,6 +46,9 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private long lastClickTime = 0;
     private static final long CLICK_INTERVAL = 800; // 防重复点击间隔
+    // 新增：存储当前用户最新头像URL，用于列表项刷新
+    private String currentUserAvatarUrl;
+    private static final String BASE_URL = "http://10.34.2.227:5190/";
 
     // 回调接口：通知外部刷新列表点赞数
     public interface OnLikeStatusChangeListener {
@@ -55,6 +60,8 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         this.shares = shares != null ? shares : new ArrayList<>();
         this.currentUserId = currentUserId;
         this.likeStatusChangeListener = listener;
+        // 初始化：加载当前用户默认头像URL
+        this.currentUserAvatarUrl = BASE_URL + "user/avatar/" + currentUserId;
     }
 
     @NonNull
@@ -81,6 +88,17 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         notifyDataSetChanged();
     }
 
+    // 新增：外部调用更新当前用户头像URL，并刷新列表中所有当前用户的动态项
+    public void updateCurrentUserAvatar(String newAvatarUrl) {
+        this.currentUserAvatarUrl = newAvatarUrl;
+        // 遍历列表，刷新当前用户发布的动态项头像
+        for (int i = 0; i < shares.size(); i++) {
+            if (shares.get(i).getUid() == currentUserId) { // 匹配当前用户发布的动态
+                notifyItemChanged(i); // 刷新对应位置的列表项
+            }
+        }
+    }
+
     public class ShareViewHolder extends RecyclerView.ViewHolder {
         private TextView tvUsername;
         private TextView tvContent;
@@ -93,11 +111,14 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         private int currentPosition;     // 当前列表位置
         private View itemView;
         private boolean isRequesting = false; // 避免并发请求
+        // 新增：动态项中的用户头像控件（昵称左侧）
+        private ImageView ivDynamicUserAvatar;
 
         public ShareViewHolder(View itemView) {
             super(itemView);
             this.itemView = itemView;
-            // 绑定控件
+            // 绑定控件：新增动态头像控件（与item_share.xml中的iv_dynamic_avatar匹配）
+            ivDynamicUserAvatar = itemView.findViewById(R.id.iv_dynamic_avatar);
             tvUsername = itemView.findViewById(R.id.tv_username);
             tvContent = itemView.findViewById(R.id.tv_content);
             rvImages = itemView.findViewById(R.id.image_recycler_view);
@@ -123,7 +144,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             });
         }
 
-        // 绑定数据到UI
+        // 绑定数据到UI：新增头像加载逻辑
         public void bind(Share share, int position) {
             currentShareId = share.getSid();
             currentPosition = position;
@@ -134,15 +155,71 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             tvTime.setText(share.getCreate_time());
             btnLike.setText(String.valueOf(share.getLikeCount()));
 
+            // 新增：加载动态项中的用户头像（关键）
+            loadDynamicItemAvatar(share);
+
             // 图片列表绑定
             imageAdapter = new ImageAdapter(mActivity, share.getImages());
             rvImages.setAdapter(imageAdapter);
 
-            // 初始化：从后端获取当前用户的点赞状态（关键，确保状态正确）
+            // 初始化：从后端获取当前用户的点赞状态
             checkLikeStatus();
         }
 
-        // 核心：根据点赞状态切换操作
+        // 新增：加载动态项中的用户头像（区分当前用户与其他用户）
+        private void loadDynamicItemAvatar(Share share) {
+            if (ivDynamicUserAvatar == null) return;
+
+            // 基础URL（与后端服务地址一致）
+            String baseUrl = "http://10.34.2.227:5190";
+
+            if (share.getUid() == currentUserId) {
+                // 当前用户的动态：加载最新头像
+                Glide.with(mActivity)
+                        .load(currentUserAvatarUrl)
+                        .circleCrop()
+                        .placeholder(R.drawable.baseline_person_24)
+                        .error(R.drawable.baseline_person_24)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .into(ivDynamicUserAvatar);
+            } else {
+                // 其他用户的动态：加载对应的头像
+                String otherUserAvatarUrl = share.getAvatarUrl();
+                Log.d("Avatar", "Other user avatar URL from server: " + otherUserAvatarUrl);
+
+                // 处理URL（后端返回的是相对路径，需要拼接基础URL）
+                if (otherUserAvatarUrl != null && !otherUserAvatarUrl.startsWith("http")) {
+                    // 拼接完整URL（处理可能的重复斜杠问题）
+                    if (otherUserAvatarUrl.startsWith("/")) {
+                        otherUserAvatarUrl = baseUrl + otherUserAvatarUrl;
+                    } else {
+                        otherUserAvatarUrl = baseUrl + "/" + otherUserAvatarUrl;
+                    }
+                }
+
+                Log.d("Avatar", "Other user avatar full URL: " + otherUserAvatarUrl);
+
+                // 如果URL仍为null，使用默认头像
+                if (otherUserAvatarUrl == null) {
+                    Glide.with(mActivity)
+                            .load(R.drawable.baseline_person_24)
+                            .circleCrop()
+                            .into(ivDynamicUserAvatar);
+                } else {
+                    // 加载其他用户头像
+                    Glide.with(mActivity)
+                            .load(otherUserAvatarUrl)
+                            .circleCrop()
+                            .placeholder(R.drawable.baseline_person_24)  // 加载中显示默认头像
+                            .error(R.drawable.baseline_person_24)        // 加载失败显示默认头像
+                            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)  // 恢复默认缓存策略
+                            .skipMemoryCache(false)                         // 恢复内存缓存
+                            .into(ivDynamicUserAvatar);
+                }
+            }
+        }
+        // 核心：根据点赞状态切换操作（原有逻辑不变）
         private void toggleLike() {
             if (isLiked) {
                 cancelLike(); // 已点赞 → 执行取消点赞
@@ -151,7 +228,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             }
         }
 
-        // 1. 检查点赞状态：从后端同步isLiked值
+        // 1. 检查点赞状态：从后端同步isLiked值（原有逻辑不变）
         private void checkLikeStatus() {
             ApiService apiService = ApiClient.getApiService();
             apiService.checkLike(currentUserId, currentShareId).enqueue(new Callback<ResponseBody>() {
@@ -159,19 +236,17 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
-                            // 解析后端返回的 {"is_liked":true/false}（与Flask接口返回一致）
                             String result = response.body().string();
                             JSONObject jsonResult = new JSONObject(result);
-                            // 关键：精准获取is_liked字段，避免解析错误
                             isLiked = jsonResult.getBoolean("is_liked");
-                            updateLikeButtonUI(); // 同步按钮UI
+                            updateLikeButtonUI();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-                        isRequesting = false; // 无论成功失败，重置请求状态
+                        isRequesting = false;
                         if (response.errorBody() != null) {
-                            response.errorBody().close(); // 关闭错误流，避免资源泄漏
+                            response.errorBody().close();
                         }
                     }
                 }
@@ -184,12 +259,11 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             });
         }
 
-        // 2. 点赞操作：调用后端/like接口
+        // 2. 点赞操作：调用后端/like接口（原有逻辑不变）
         private void doLike() {
             ApiService apiService = ApiClient.getApiService();
             JSONObject json = new JSONObject();
             try {
-                // 构造请求参数（与Flask接口要求的uid、sid一致）
                 json.put("uid", currentUserId);
                 json.put("sid", currentShareId);
                 RequestBody body = RequestBody.create(JSON, json.toString());
@@ -199,17 +273,14 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                     public void onResponse(Call<LikeResponse> call, Response<LikeResponse> response) {
                         try {
                             if (response.code() == 409) {
-                                // 重复点赞（后端返回409）：同步状态为已点赞
                                 isLiked = true;
                                 updateLikeButtonUI();
                             } else if (response.isSuccessful() && response.body() != null) {
-                                // 点赞成功：更新本地数据和UI
                                 LikeResponse likeResponse = response.body();
                                 int newLikeCount = likeResponse.getLike_count();
                                 shares.get(currentPosition).setLikeCount(newLikeCount);
                                 isLiked = true;
                                 updateLikeButtonUI();
-                                // 通知外部刷新列表（如需要）
                                 if (likeStatusChangeListener != null) {
                                     likeStatusChangeListener.onLikeUpdated(currentPosition);
                                 }
@@ -236,34 +307,28 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             }
         }
 
-        // 3. 取消点赞操作：调用后端/unlike接口（核心功能）
+        // 3. 取消点赞操作：调用后端/unlike接口（原有逻辑不变）
         private void cancelLike() {
             ApiService apiService = ApiClient.getApiService();
             JSONObject json = new JSONObject();
             try {
-                // 构造请求参数（与Flask接口要求的uid、sid完全一致）
                 json.put("uid", currentUserId);
                 json.put("sid", currentShareId);
                 RequestBody body = RequestBody.create(JSON, json.toString());
 
-                // 调用取消点赞接口（与ApiService定义的unlikeShare一致）
                 apiService.unlikeShare(body).enqueue(new Callback<LikeResponse>() {
                     @Override
                     public void onResponse(Call<LikeResponse> call, Response<LikeResponse> response) {
                         try {
                             if (response.code() == 400) {
-                                // 未点赞却取消（后端返回400）：同步状态为未点赞
                                 isLiked = false;
                                 updateLikeButtonUI();
                             } else if (response.isSuccessful() && response.body() != null) {
-                                // 取消点赞成功：更新本地数据和UI（与Flask返回的like_count同步）
                                 LikeResponse likeResponse = response.body();
                                 int newLikeCount = likeResponse.getLike_count();
-                                // 关键：更新当前分享的点赞数，确保UI显示正确
                                 shares.get(currentPosition).setLikeCount(newLikeCount);
-                                isLiked = false; // 标记为未点赞
-                                updateLikeButtonUI(); // 刷新按钮为灰色边框
-                                // 通知外部刷新列表（如需要）
+                                isLiked = false;
+                                updateLikeButtonUI();
                                 if (likeStatusChangeListener != null) {
                                     likeStatusChangeListener.onLikeUpdated(currentPosition);
                                 }
@@ -273,7 +338,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                         } finally {
                             isRequesting = false;
                             if (response.errorBody() != null) {
-                                response.errorBody().close(); // 关闭错误流，避免资源泄漏
+                                response.errorBody().close();
                             }
                         }
                     }
@@ -290,7 +355,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             }
         }
 
-        // 4. 更新点赞按钮UI：已点赞（红色实心）/未点赞（灰色边框）
+        // 4. 更新点赞按钮UI（原有逻辑不变）
         private void updateLikeButtonUI() {
             if (isLiked) {
                 // 已点赞状态：红色实心爱心 + 红色文字
@@ -315,7 +380,6 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                 }
                 btnLike.setTextColor(ContextCompat.getColor(mActivity, android.R.color.darker_gray));
             }
-            // 同步显示最新点赞数（从本地shares列表获取）
             btnLike.setText(String.valueOf(shares.get(currentPosition).getLikeCount()));
         }
 

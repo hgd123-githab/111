@@ -1,88 +1,78 @@
 package com.example.shareplatform.network;
 
-import java.io.IOException;
+import android.util.Log;
+
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
+import okio.Buffer;
+import okio.BufferedSource;
+import okio.GzipSource;
+import okio.Okio;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
-    private static final String BASE_URL = "http://10.34.86.144:5190";
-    private static final int TIMEOUT = 60;
-    private static Retrofit retrofit = null;
-    private static OkHttpClient client = null;
+    private static final String BASE_URL = "http://10.34.2.227:5190/";
+    private static ApiService apiService;
 
     public static ApiService getApiService() {
-        if (retrofit == null) {
-            HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
-            loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BASIC);
+        if (apiService == null) {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    // 1. 修复日志拦截器：读取响应后不破坏原始流
+                    .addInterceptor(chain -> {
+                        Request request = chain.request();
+                        // 打印请求日志
+                        Log.d("ApiClient", "Request: " + request.method() + " " + request.url());
 
-            // 修复1：响应校验拦截器 - 读取响应体后必须关闭原始响应流
-            Interceptor responseCheckInterceptor = chain -> {
-                Request request = chain.request();
-                Response originalResponse = chain.proceed(request);
-                ResponseBody originalBody = originalResponse.body();
-
-                if (!originalResponse.isSuccessful() || originalBody == null) {
-                    originalResponse.close(); // 关键：请求失败时关闭原始响应
-                    throw new IOException("请求失败，状态码：" + originalResponse.code());
-                }
-
-                // 读取响应体并重新构建新响应（原始响应需关闭）
-                String responseContent = originalBody.string();
-                originalResponse.close(); // 关键：读取完成后关闭原始响应流
-
-                // 构建新的响应体，避免流被消耗
-                ResponseBody newBody = ResponseBody.create(originalBody.contentType(), responseContent);
-                return originalResponse.newBuilder()
-                        .body(newBody)
-                        .build();
-            };
-
-            // 修复2：重试拦截器 - 简化逻辑，避免过度重试加剧冲突
-            Interceptor retryInterceptor = chain -> {
-                Request request = chain.request();
-                Response response = null;
-                int retryCount = 0;
-                while (retryCount < 1) { // 重试次数减少为1次，避免并发堆积
-                    try {
-                        response = chain.proceed(request);
-                        if (response.isSuccessful()) {
-                            break;
-                        } else {
-                            response.close(); // 重试前关闭失败的响应
+                        Response response = chain.proceed(request);
+                        // 关键：复制响应体，避免原始流被消耗
+                        ResponseBody responseBody = response.body();
+                        String responseString = "";
+                        if (responseBody != null) {
+                            // 处理gzip压缩响应（若有）
+                            BufferedSource source = responseBody.source();
+                            source.request(Long.MAX_VALUE); // 读取全部数据
+                            Buffer buffer = source.buffer();
+                            if ("gzip".equalsIgnoreCase(response.headers().get("Content-Encoding"))) {
+                                try (GzipSource gzippedSource = new GzipSource(buffer.clone())) {
+                                    responseString = Okio.buffer(gzippedSource).readString(
+                                            java.nio.charset.StandardCharsets.UTF_8
+                                    );
+                                }
+                            } else {
+                                responseString = buffer.clone().readString(
+                                        java.nio.charset.StandardCharsets.UTF_8
+                                );
+                            }
+                            // 重新构建响应体（核心：否则后续解析无数据）
+                            ResponseBody newResponseBody = ResponseBody.create(
+                                    responseBody.contentType(),
+                                    responseString.getBytes()
+                            );
+                            // 返回新的响应，保留原始流
+                            return response.newBuilder()
+                                    .body(newResponseBody)
+                                    .build();
                         }
-                    } catch (IOException e) {
-                        retryCount++;
-                        if (retryCount >= 1) {
-                            throw e;
-                        }
-                    }
-                }
-                return response;
-            };
-
-            // 构建OkHttpClient：拦截器顺序（重试→响应校验→日志）
-            client = new OkHttpClient.Builder()
-                    .connectTimeout(TIMEOUT, java.util.concurrent.TimeUnit.SECONDS)
-                    .readTimeout(TIMEOUT, java.util.concurrent.TimeUnit.SECONDS)
-                    .writeTimeout(TIMEOUT, java.util.concurrent.TimeUnit.SECONDS)
-                    .retryOnConnectionFailure(true)
-                    .addInterceptor(retryInterceptor)          // 重试拦截器（先）
-                    .addInterceptor(responseCheckInterceptor)  // 响应校验（中）
-                    .addInterceptor(loggingInterceptor)        // 日志（后）
+                        return response;
+                    })
+                    // 2. 添加超时拦截器，避免网络阻塞
+                    .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                    .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
                     .build();
 
-            retrofit = new Retrofit.Builder()
+            Retrofit retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(client)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create()) // 确保Gson解析器存在
                     .build();
+
+            apiService = retrofit.create(ApiService.class);
         }
-        return retrofit.create(ApiService.class);
+        return apiService;
     }
 }

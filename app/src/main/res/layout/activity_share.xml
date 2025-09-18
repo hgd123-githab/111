@@ -14,7 +14,13 @@
         android:contentDescription="返回主页"
         android:padding="8dp"
         android:background="@android:color/transparent"/>
-
+    <ImageView
+        android:id="@+id/iv_user_avatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="start|top"
+        android:layout_margin="16dp"
+        android:src="@drawable/baseline_person_24" />
     <EditText
         android:id="@+id/et_content"
         android:layout_width="match_parent"
