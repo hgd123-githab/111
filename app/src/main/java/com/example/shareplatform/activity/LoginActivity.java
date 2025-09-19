@@ -35,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     
+    
     private void initViews() {
         etPhone = findViewById(R.id.et_phone);
         etPassword = findViewById(R.id.et_password);
