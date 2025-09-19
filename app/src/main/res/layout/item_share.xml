@@ -4,97 +4,104 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="12dp"
-    android:paddingTop="6dp"
     android:background="@android:color/white"
-    android:layout_marginBottom="8dp"
-    android:elevation="2dp">
+    android:layout_marginBottom="8dp">
 
-    <!-- 新增水平布局，包含头像和用户名 -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+    <!-- 头像 + 昵称 + 删除按钮（横向布局） -->
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="horizontal"
+android:gravity="center_vertical"
+android:layout_marginBottom="8dp">
 
-        <!-- 用户头像 -->
-        <ImageView
-            android:id="@+id/iv_user_avatar"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/baseline_person_24"
-            android:contentDescription="用户头像"
-            android:background="@drawable/shape_avatar"
-            android:scaleType="centerCrop"
-            android:layout_marginEnd="8dp"/>
+<!-- 动态项头像 -->
+<ImageView
+    android:id="@+id/iv_dynamic_avatar"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:src="@drawable/baseline_person_24"
+    android:scaleType="centerCrop"
+    android:layout_marginEnd="8dp"/>
 
-        <TextView
-            android:id="@+id/tv_username"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:layout_marginTop="2dp"/>
-    </LinearLayout>
+<!-- 用户名 -->
+<TextView
+    android:id="@+id/tv_username"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="16sp"
+    android:textStyle="bold"
+    android:textColor="#333333"/>
 
-    <TextView
-        android:id="@+id/tv_content"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textColor="#666666"
-        android:layout_marginTop="4dp"/>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/image_recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:orientation="horizontal"/>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:paddingTop="8dp">
-
-        <TextView
-            android:id="@+id/tv_time"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="15dp"
-            android:textColor="#999999"
-            android:layout_marginEnd="8dp" />
-
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="horizontal"
-            android:gravity="end">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/iv_like"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:src="@drawable/baseline_favorite_border_24"
-                    android:contentDescription="点赞"/>
-
-                <TextView
-                    android:id="@+id/tv_like_count"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="12sp"
-                    android:textColor="#999999"
-                    android:layout_marginStart="4dp"/>
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
+<!-- 删除按钮：修复backgroundTint兼容性问题 -->
+<Button
+    android:id="@+id/btn_delete"
+    android:layout_width="wrap_content"
+    android:layout_height="45dp"
+    android:text="删除"
+    android:textSize="12sp"
+    android:textColor="@android:color/holo_red_dark"
+    android:background="@android:color/transparent"
+  />
 </LinearLayout>
+
+    <!-- 分享内容 -->
+<TextView
+android:id="@+id/tv_content"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:textSize="14sp"
+android:textColor="#666666"
+android:layout_marginBottom="8dp"/>
+
+    <!-- 图片列表：修复无图片时的测量问题 -->
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+<androidx.recyclerview.widget.RecyclerView
+android:id="@+id/image_recycler_view"
+android:layout_width="match_parent"
+android:layout_height="120dp"
+    android:layout_marginBottom="8dp"
+    android:visibility="gone"/>  <!-- 默认隐藏，有图片时再显示 -->
+
+    <!-- 无图片时的占位布局（避免测量空视图） -->
+<TextView
+android:id="@+id/tv_no_image"
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:text="无图片"
+android:textSize="12sp"
+android:textColor="#999999"
+android:visibility="gone"/>
+    </LinearLayout>
+
+    <!-- 时间 + 点赞按钮 -->
+<LinearLayout
+android:layout_width="match_parent"
+android:layout_height="wrap_content"
+android:orientation="horizontal"
+>
+
+<TextView
+    android:id="@+id/tv_time"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="12sp"
+    android:textColor="#999999"/>
+
+<Button
+    android:id="@+id/btn_like"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent"
+    android:drawableStart="@drawable/baseline_favorite_border_24"
+    android:drawablePadding="4dp"
+    android:text="0"
+    android:textSize="12sp"
+    android:textColor="#999999"/>
+</LinearLayout>
+
+    </LinearLayout>

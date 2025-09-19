@@ -1,12 +1,12 @@
 package com.example.shareplatform.activity;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
-
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -16,7 +16,17 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.shareplatform.R;
 import com.example.shareplatform.model.response.ShareResponse;
 import com.example.shareplatform.util.Resource;
@@ -37,15 +47,35 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
     private Button publishBtn;
     private ShareViewModel shareViewModel;
     private AuthViewModel authViewModel;
-
     private List<Uri> imageUris = new ArrayList<>();
     private static final int PICK_IMAGE_REQUEST = 100;
     private static final int PERMISSION_REQUEST_CODE = 101;
+    private ImageView userAvatar; // 用于显示用户头像的控件
+
+    // 头像更新广播接收器
+    private BroadcastReceiver avatarUpdatedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(PersonalInformation.ACTION_AVATAR_UPDATED)) {
+                String avatarUrl = intent.getStringExtra("avatar_url");
+                if (avatarUrl != null && userAvatar != null) {
+                    Glide.with(ShareActivity.this)
+                            .load(avatarUrl)
+                            .circleCrop()
+                            .placeholder(R.drawable.baseline_person_24)
+                            .error(R.drawable.baseline_person_24)
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .skipMemoryCache(true)
+                            .into(userAvatar);
+                }
+            }
+        }
+    };
 
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_share);
 
         View btnBack = findViewById(R.id.btn_back);
@@ -56,7 +86,7 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
             startActivity(intent);
             finish();
         });
-        
+
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
         if (!authViewModel.isLoggedIn()) {
             navigateToLoginActivity();
@@ -67,6 +97,33 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
         shareViewModel = new ViewModelProvider(this).get(ShareViewModel.class);
         setupClickListeners();
         setupObservers();
+
+        // 初始化头像控件
+        userAvatar = findViewById(R.id.iv_user_avatar);
+        // 注册广播接收器
+        LocalBroadcastManager.getInstance(this).registerReceiver(
+                avatarUpdatedReceiver,
+                new IntentFilter(PersonalInformation.ACTION_AVATAR_UPDATED)
+        );
+        // 首次加载用户头像（确保进入页面时头像显示正确）
+        loadUserAvatar();
+    }
+
+    // 首次加载用户头像
+    private void loadUserAvatar() {
+        int userId = authViewModel.getUserId();
+        if (userId != -1) {
+            // 假设后端获取头像的接口为：/user/avatar/{uid}
+            String avatarUrl = "http://10.34.2.227:5190/user/avatar/" + userId;
+            Glide.with(this)
+                    .load(avatarUrl)
+                    .circleCrop()
+                    .placeholder(R.drawable.baseline_person_24)
+                    .error(R.drawable.baseline_person_24)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .into(userAvatar);
+        }
     }
 
     private void initViews() {
@@ -208,5 +265,12 @@ public class ShareActivity extends AppCompatActivity implements EasyPermissions.
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // 注销广播接收器
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(avatarUpdatedReceiver);
     }
 }

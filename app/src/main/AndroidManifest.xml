@@ -16,16 +16,25 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Shareplatform"
         android:usesCleartextTraffic="true"
+
         tools:targetApi="31">
+
+        <activity
+            android:name=".activity.ImagePreviewActivity"
+            android:exported="false" />
         <activity
             android:name=".activity.Personshow"
             android:exported="false" />
         <activity
             android:name=".activity.PersonalInformation"
             android:exported="false" />
+<<<<<<< HEAD
         <activity
             android:name=".activity.Show"
             android:exported="false" />
+=======
+
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
         <activity
             android:name=".activity.ShareActivity"
             android:exported="false" />
@@ -44,6 +53,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
     </application>
 
 </manifest>

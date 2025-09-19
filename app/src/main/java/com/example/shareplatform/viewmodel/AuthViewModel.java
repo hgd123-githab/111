@@ -24,6 +24,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class AuthViewModel extends AndroidViewModel {
+
     private ApiService apiService;
     private SharedPreferences sharedPreferences;
     private static final String PREF_NAME = "user_prefs";
@@ -39,6 +40,8 @@ public class AuthViewModel extends AndroidViewModel {
         sharedPreferences = application.getSharedPreferences(PREF_NAME, Application.MODE_PRIVATE);
         loginLiveData = new MutableLiveData<>();
         registerLiveData = new MutableLiveData<>();
+
+
     }
 
 

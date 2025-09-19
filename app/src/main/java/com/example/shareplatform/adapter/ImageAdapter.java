@@ -1,9 +1,7 @@
 package com.example.shareplatform.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,95 +12,76 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.shareplatform.R;
-import com.example.shareplatform.network.ApiClient;
+import com.example.shareplatform.activity.ImagePreviewActivity;
 
-import java.io.IOException;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Response;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private List<String> imageUrls;
     private Context context;
+<<<<<<< HEAD
     private static final String BASE_URL = "http://10.34.86.144:5190"; // 替换为实际服务器地址
+=======
+    private RequestOptions glideOptions = new RequestOptions()
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .placeholder(R.drawable.ic_launcher_background)
+            .error(R.drawable.ic_launcher_background)
+            .override(300, 300);
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 
-    public ImageAdapter(List<String> imageUrls) {
-        this.imageUrls = imageUrls;
-        this.context = null; // 由onCreateViewHolder设置
+    public ImageAdapter(Context context, List<String> imageUrls) {
+        this.context = context;
+        this.imageUrls = imageUrls != null ? imageUrls : List.of();
     }
 
+    public ImageAdapter(List<String> imageUrls) {
+        this.context = null;
+        this.imageUrls = imageUrls != null ? imageUrls : List.of();
+    }
 
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        context = parent.getContext();
-        View view = LayoutInflater.from(context).inflate(R.layout.item_image, parent, false);
+        Context parentContext = parent.getContext();
+        View view = LayoutInflater.from(parentContext).inflate(R.layout.item_image, parent, false);
         return new ImageViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         String imageUrl = imageUrls.get(position);
-        holder.bind(imageUrl);
+        Context loadContext = context != null ? context : holder.itemView.getContext();
+        String fullUrl = "http://10.34.2.227:5190" + imageUrl;
+
+        Glide.with(loadContext)
+                .load(fullUrl)
+                .apply(glideOptions)
+                .into(holder.ivImage);
+
+        // 添加点击事件
+        holder.ivImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(loadContext, ImagePreviewActivity.class);
+                intent.putExtra("IMAGE_URL", fullUrl);
+                loadContext.startActivity(intent);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return imageUrls != null ? imageUrls.size() : 0;
+        return imageUrls.size();
     }
 
-    public class ImageViewHolder extends RecyclerView.ViewHolder {
-        private ImageView imageView;
+    public static class ImageViewHolder extends RecyclerView.ViewHolder {
+        ImageView ivImage;
 
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
-            imageView = itemView.findViewById(R.id.iv_image);
-        }
-
-        public void bind(String imageUrl) {
-            // 处理相对URL（Flask返回的是/image/uid/filename）
-            if (imageUrl.startsWith("/image")) {
-                imageUrl = BASE_URL + imageUrl; // 拼接完整URL
-            }
-
-            Log.d("ImageAdapter", "加载图片: " + imageUrl);
-
-            // 使用Glide加载图片
-            Glide.with(context)
-                    .load(imageUrl)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .placeholder(R.drawable.ic_launcher_foreground)
-                    .error(R.drawable.ic_launcher_background)
-                    .into(imageView);
-
-            /* 备用方案：手动加载图片（Glide失败时使用）
-            ApiClient.getApiService().getImage(uid, filename).enqueue(new Callback<ResponseBody>() {
-                @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    if (response.isSuccessful() && response.body() != null) {
-                        try {
-                            byte[] bytes = response.body().bytes();
-                            final Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            if (itemView.getContext() instanceof Activity) {
-                                ((Activity) itemView.getContext()).runOnUiThread(() -> {
-                                    imageView.setImageBitmap(bitmap);
-                                });
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-                    t.printStackTrace();
-                }
-            });
-            */
+            ivImage = itemView.findViewById(R.id.iv_image);
         }
     }
 }
