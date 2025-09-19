@@ -20,20 +20,21 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- 用户头像 -->
-    <!-- 头像控件 -->
-
-
     <ImageView
         android:id="@+id/iv_user_avatar"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="24dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:clickable="true"
+        android:contentDescription="用户头像"
+        android:scaleType="centerCrop"
         android:src="@drawable/baseline_person_24"
-        tools:layout_editor_absoluteX="131dp"
-        tools:layout_editor_absoluteY="75dp" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
+    <!-- 信息设置容器 -->
     <LinearLayout
         android:id="@+id/info_container"
         android:layout_width="match_parent"
@@ -52,13 +53,13 @@
         <LinearLayout
             android:id="@+id/ll_change_avatar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="56dp"
             android:background="@drawable/bg_my_info_selector"
             android:clickable="true"
             android:focusable="true"
             android:gravity="center_vertical"
             android:orientation="horizontal"
-            android:padding="16dp">
+            android:paddingHorizontal="16dp">
 
             <TextView
                 android:layout_width="0dp"
@@ -71,32 +72,17 @@
             <ImageView
                 android:layout_width="20dp"
                 android:layout_height="20dp"
+                android:contentDescription="箭头图标"
                 android:src="@drawable/baseline_arrow_forward_ios_24" />
         </LinearLayout>
 
         <!-- 分割线 -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#F5F5F5" />
+            android:layout_height="0.5dp"
+            android:layout_marginHorizontal="16dp"
+            android:background="#EEEEEE" />
 
-        <!-- 更改昵称条目 -->
-        <LinearLayout
-            android:id="@+id/ll_change_nickname"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_my_info_selector"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-
-
-        </LinearLayout>
     </LinearLayout>
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
