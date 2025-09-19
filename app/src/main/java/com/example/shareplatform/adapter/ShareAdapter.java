@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -14,10 +15,22 @@ import com.example.shareplatform.model.Share;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 // ShareAdapter.java - 分享列表适配器
 public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHolder> {
     private List<Share> shares;
 
+//更改
+private OnShareItemClickListener listener;
+    public interface OnShareItemClickListener {
+        void onShareItemClick(Share share);
+    }
+    public void setOnShareItemClickListener(OnShareItemClickListener listener) {
+        this.listener = listener;
+    }
+
+//更改
     public ShareAdapter(List<Share> shares) {
         this.shares = shares;
     }
@@ -35,7 +48,14 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
     @Override
     public void onBindViewHolder(ShareViewHolder holder, int position) {
         Share share = shares.get(position);
-        holder.bind(share);
+       holder.bind(share);
+        //更改
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onShareItemClick(share);
+            }
+        });
+        //更改
     }
 
     @Override
@@ -63,7 +83,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         }
 
         public void bind(Share share) {
-            usernameTv.setText("用户" + share.getUid());
+            usernameTv.setText(share.getName());
             contentTv.setText(share.getContent());
             timeTv.setText(share.getCreate_time());
 

@@ -8,10 +8,8 @@ public class Share {
     private String content;
     private String create_time;
     private List<String> images;
+    private String name;
 
-    public Share() {
-
-    }
 
     public Share(int sid, int uid, String content, String create_time, List<String> images) {
         this.sid = sid;
@@ -19,6 +17,7 @@ public class Share {
         this.content = content;
         this.create_time = create_time;
         this.images = images;
+        this.name = name;
     }
 
     public int getSid() {
@@ -59,5 +58,13 @@ public class Share {
 
     public void setImages(List<String> images) {
         this.images = images;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

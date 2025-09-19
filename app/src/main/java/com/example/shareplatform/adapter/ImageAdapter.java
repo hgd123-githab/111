@@ -27,7 +27,7 @@ import okhttp3.Response;
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private List<String> imageUrls;
     private Context context;
-    private static final String BASE_URL = "http://10.34.48.10:5190"; // 替换为实际服务器地址
+    private static final String BASE_URL = "http://10.34.86.144:5190"; // 替换为实际服务器地址
 
     public ImageAdapter(List<String> imageUrls) {
         this.imageUrls = imageUrls;

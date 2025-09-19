@@ -24,7 +24,7 @@
             android:name=".activity.PersonalInformation"
             android:exported="false" />
         <activity
-            android:name=".activity.show"
+            android:name=".activity.Show"
             android:exported="false" />
         <activity
             android:name=".activity.ShareActivity"
