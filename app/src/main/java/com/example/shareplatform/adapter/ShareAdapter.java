@@ -12,12 +12,15 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 import com.example.shareplatform.R;
 import com.example.shareplatform.model.Share;
 import com.example.shareplatform.model.response.LikeResponse;
@@ -39,28 +42,38 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHolder> {
-    private List<Share> shares;
+    private static final String TAG = "ShareAdapter";
+    private List<Share> shares = new ArrayList<>();
     private int currentUserId;
     private OnLikeStatusChangeListener likeStatusChangeListener;
+    private OnShareDeleteListener deleteListener;
     private Activity mActivity;
+    private boolean isMySharePage;
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private long lastClickTime = 0;
-    private static final long CLICK_INTERVAL = 800; // 防重复点击间隔
-    // 新增：存储当前用户最新头像URL，用于列表项刷新
+    private static final long CLICK_INTERVAL = 800;
     private String currentUserAvatarUrl;
     private static final String BASE_URL = "http://10.34.2.227:5190/";
 
-    // 回调接口：通知外部刷新列表点赞数
+    // 回调接口
     public interface OnLikeStatusChangeListener {
         void onLikeUpdated(int position);
     }
 
-    public ShareAdapter(Activity activity, List<Share> shares, int currentUserId, OnLikeStatusChangeListener listener) {
+    public interface OnShareDeleteListener {
+        void onShareDeleted(int shareId);
+    }
+
+    // 构造函数
+    public ShareAdapter(Activity activity, List<Share> shares, int currentUserId,
+                        OnLikeStatusChangeListener likeListener, OnShareDeleteListener deleteListener,
+                        boolean isMySharePage) {
         this.mActivity = activity;
         this.shares = shares != null ? shares : new ArrayList<>();
         this.currentUserId = currentUserId;
-        this.likeStatusChangeListener = listener;
-        // 初始化：加载当前用户默认头像URL
+        this.likeStatusChangeListener = likeListener;
+        this.deleteListener = deleteListener;
+        this.isMySharePage = isMySharePage;
         this.currentUserAvatarUrl = BASE_URL + "user/avatar/" + currentUserId;
     }
 
@@ -73,6 +86,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
 
     @Override
     public void onBindViewHolder(@NonNull ShareViewHolder holder, int position) {
+        if (position >= shares.size()) return;
         Share share = shares.get(position);
         holder.bind(share, position);
     }
@@ -88,147 +102,221 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
         notifyDataSetChanged();
     }
 
-    // 新增：外部调用更新当前用户头像URL，并刷新列表中所有当前用户的动态项
+    // 更新当前用户头像
     public void updateCurrentUserAvatar(String newAvatarUrl) {
         this.currentUserAvatarUrl = newAvatarUrl;
-        // 遍历列表，刷新当前用户发布的动态项头像
         for (int i = 0; i < shares.size(); i++) {
-            if (shares.get(i).getUid() == currentUserId) { // 匹配当前用户发布的动态
-                notifyItemChanged(i); // 刷新对应位置的列表项
+            if (shares.get(i).getUid() == currentUserId) {
+                notifyItemChanged(i);
             }
         }
     }
 
+    // 分享项 ViewHolder
     public class ShareViewHolder extends RecyclerView.ViewHolder {
         private TextView tvUsername;
         private TextView tvContent;
         private RecyclerView rvImages;
         private TextView tvTime;
         private Button btnLike;
+        private Button btnDelete;
+        private TextView tvNoImage;
         private ImageAdapter imageAdapter;
-        private boolean isLiked = false; // 当前点赞状态（核心标记）
-        private int currentShareId;     // 当前分享ID
-        private int currentPosition;     // 当前列表位置
-        private View itemView;
-        private boolean isRequesting = false; // 避免并发请求
-        // 新增：动态项中的用户头像控件（昵称左侧）
+        private boolean isLiked = false;
+        private int currentShareId;
+        private int currentPosition;
+        private boolean isRequesting = false;
         private ImageView ivDynamicUserAvatar;
 
         public ShareViewHolder(View itemView) {
             super(itemView);
-            this.itemView = itemView;
-            // 绑定控件：新增动态头像控件（与item_share.xml中的iv_dynamic_avatar匹配）
+            // 绑定控件
             ivDynamicUserAvatar = itemView.findViewById(R.id.iv_dynamic_avatar);
             tvUsername = itemView.findViewById(R.id.tv_username);
             tvContent = itemView.findViewById(R.id.tv_content);
             rvImages = itemView.findViewById(R.id.image_recycler_view);
+            tvNoImage = itemView.findViewById(R.id.tv_no_image);
             tvTime = itemView.findViewById(R.id.tv_time);
             btnLike = itemView.findViewById(R.id.btn_like);
+            btnDelete = itemView.findViewById(R.id.btn_delete);
 
-            // 初始化图片列表（水平布局）
+            // 图片列表布局
             rvImages.setLayoutManager(new LinearLayoutManager(
                     mActivity, LinearLayoutManager.HORIZONTAL, false
             ));
 
-            // 点赞按钮点击事件：核心逻辑（防抖+状态切换）
+            // 点赞按钮逻辑
             btnLike.setOnClickListener(v -> {
                 long currentTime = System.currentTimeMillis();
-                // 1. 防重复点击：800ms内或请求中，忽略点击
-                if (currentTime - lastClickTime < CLICK_INTERVAL || isRequesting) {
-                    return;
-                }
+                if (currentTime - lastClickTime < CLICK_INTERVAL || isRequesting) return;
                 lastClickTime = currentTime;
                 isRequesting = true;
-                // 2. 根据当前状态切换：已点赞→取消，未点赞→点赞
                 toggleLike();
+            });
+
+            // 删除按钮逻辑：防重复点击
+            btnDelete.setOnClickListener(v -> {
+                currentPosition = getAdapterPosition();
+                if (currentPosition == RecyclerView.NO_POSITION || currentPosition >= shares.size()) return;
+                if (isRequesting) return;
+
+                currentShareId = shares.get(currentPosition).getSid();
+                isRequesting = true;
+                deleteShareFromServer();
             });
         }
 
-        // 绑定数据到UI：新增头像加载逻辑
         public void bind(Share share, int position) {
             currentShareId = share.getSid();
             currentPosition = position;
 
             // 基础数据绑定
-            tvUsername.setText(share.getName());
-            tvContent.setText(share.getContent());
-            tvTime.setText(share.getCreate_time());
+            tvUsername.setText(share.getName() != null ? share.getName() : "未知用户");
+            tvContent.setText(share.getContent() != null ? share.getContent() : "");
+            tvTime.setText(share.getCreate_time() != null ? share.getCreate_time() : "");
             btnLike.setText(String.valueOf(share.getLikeCount()));
 
-            // 新增：加载动态项中的用户头像（关键）
-            loadDynamicItemAvatar(share);
+            // 处理图片/无图片布局
+            List<String> images = share.getImages();
+            if (images != null && !images.isEmpty()) {
+                rvImages.setVisibility(View.VISIBLE);
+                tvNoImage.setVisibility(View.GONE);
+                imageAdapter = new ImageAdapter(mActivity, images);
+                rvImages.setAdapter(imageAdapter);
+            } else {
+                rvImages.setVisibility(View.GONE);
+                tvNoImage.setVisibility(View.VISIBLE);
+            }
 
-            // 图片列表绑定
-            imageAdapter = new ImageAdapter(mActivity, share.getImages());
-            rvImages.setAdapter(imageAdapter);
+            // 条件显示删除按钮（仅我的分享+当前用户发布）
+            if (isMySharePage && share.getUid() == currentUserId) {
+                btnDelete.setVisibility(View.VISIBLE);
+            } else {
+                btnDelete.setVisibility(View.GONE);
+            }
 
-            // 初始化：从后端获取当前用户的点赞状态
+            // 加载动态头像（带超时）
+            final String loadUrl = share.getUid() == currentUserId ? currentUserAvatarUrl :
+                    (share.getAvatarUrl() != null && !share.getAvatarUrl().startsWith("http")
+                            ? "http://10.34.2.227:5190" + (share.getAvatarUrl().startsWith("/") ? share.getAvatarUrl() : "/" + share.getAvatarUrl())
+                            : (share.getAvatarUrl() != null ? share.getAvatarUrl() : ""));
+            loadDynamicAvatar(loadUrl);
+
+            // 检查点赞状态
             checkLikeStatus();
         }
 
-        // 新增：加载动态项中的用户头像（区分当前用户与其他用户）
-        private void loadDynamicItemAvatar(Share share) {
-            if (ivDynamicUserAvatar == null) return;
+        // 加载头像（防网络阻塞）
+        private void loadDynamicAvatar(final String loadUrl) {
+            if (ivDynamicUserAvatar == null || mActivity.isFinishing()) return;
 
-            // 基础URL（与后端服务地址一致）
-            String baseUrl = "http://10.34.2.227:5190";
+            RequestOptions options = new RequestOptions()
+                    .circleCrop()
+                    .placeholder(R.drawable.baseline_person_24)
+                    .error(R.drawable.baseline_person_24)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .timeout(15000);
 
-            if (share.getUid() == currentUserId) {
-                // 当前用户的动态：加载最新头像
-                Glide.with(mActivity)
-                        .load(currentUserAvatarUrl)
-                        .circleCrop()
-                        .placeholder(R.drawable.baseline_person_24)
-                        .error(R.drawable.baseline_person_24)
-                        .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        .skipMemoryCache(true)
-                        .into(ivDynamicUserAvatar);
-            } else {
-                // 其他用户的动态：加载对应的头像
-                String otherUserAvatarUrl = share.getAvatarUrl();
-                Log.d("Avatar", "Other user avatar URL from server: " + otherUserAvatarUrl);
+            Glide.with(mActivity)
+                    .load(loadUrl)
+                    .apply(options)
+                    .listener(new com.bumptech.glide.request.RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable com.bumptech.glide.load.engine.GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            Log.e(TAG, "加载头像失败：" + loadUrl, e);
+                            return false;
+                        }
 
-                // 处理URL（后端返回的是相对路径，需要拼接基础URL）
-                if (otherUserAvatarUrl != null && !otherUserAvatarUrl.startsWith("http")) {
-                    // 拼接完整URL（处理可能的重复斜杠问题）
-                    if (otherUserAvatarUrl.startsWith("/")) {
-                        otherUserAvatarUrl = baseUrl + otherUserAvatarUrl;
-                    } else {
-                        otherUserAvatarUrl = baseUrl + "/" + otherUserAvatarUrl;
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                            return false;
+                        }
+                    })
+                    .into(ivDynamicUserAvatar);
+        }
+
+        // #################### 关键修复：删除请求逻辑 ####################
+        // 找到deleteShareFromServer方法，修改如下：
+        private void deleteShareFromServer() {
+            if (mActivity.isFinishing()) {
+                isRequesting = false;
+                return;
+            }
+
+            ApiService apiService = ApiClient.getApiService();
+            // 关键修复：传入Content-Type为application/json
+            Call<ResponseBody> call = apiService.deleteShare(
+                    currentShareId,
+                    currentUserId,
+                    "application/json"  // 新增：指定请求格式
+            );
+            Log.d(TAG, "发送删除请求：sid=" + currentShareId + ", uid=" + currentUserId);
+
+            call.enqueue(new Callback<ResponseBody>() {
+                @Override
+                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                    isRequesting = false;
+                    Log.d(TAG, "删除接口响应：code=" + response.code());
+
+                    try {
+                        if (response.isSuccessful()) {
+                            // 本地列表删除
+                            shares.remove(currentPosition);
+                            notifyItemRemoved(currentPosition);
+                            notifyItemRangeChanged(currentPosition, shares.size());
+                            // 通知主页面
+                            if (deleteListener != null) {
+                                deleteListener.onShareDeleted(currentShareId);
+                            }
+                            Snackbar.make(itemView, "删除成功", Snackbar.LENGTH_SHORT).show();
+                        } else {
+                            String errorMsg = "删除失败（" + response.code() + "）";
+                            if (response.errorBody() != null) {
+                                String errorBody = response.errorBody().string();
+                                Log.e(TAG, "删除错误体：" + errorBody);
+                                try {
+                                    // 仅当错误体是JSON格式时才解析
+                                    if (errorBody.startsWith("{")) {
+                                        JSONObject errorJson = new JSONObject(errorBody);
+                                        errorMsg = errorJson.getString("msg");
+                                    }
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "解析错误信息失败", e);
+                                }
+                            }
+                            Snackbar.make(itemView, errorMsg, Snackbar.LENGTH_SHORT).show();
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "处理删除响应失败", e);
+                        Snackbar.make(itemView, "删除失败：解析错误", Snackbar.LENGTH_SHORT).show();
+                    } finally {
+                        if (response.errorBody() != null) {
+                            try {
+                                response.errorBody().close();
+                            } catch (Exception e) {
+                                Log.e(TAG, "关闭响应流失败", e);
+                            }
+                        }
                     }
                 }
 
-                Log.d("Avatar", "Other user avatar full URL: " + otherUserAvatarUrl);
-
-                // 如果URL仍为null，使用默认头像
-                if (otherUserAvatarUrl == null) {
-                    Glide.with(mActivity)
-                            .load(R.drawable.baseline_person_24)
-                            .circleCrop()
-                            .into(ivDynamicUserAvatar);
-                } else {
-                    // 加载其他用户头像
-                    Glide.with(mActivity)
-                            .load(otherUserAvatarUrl)
-                            .circleCrop()
-                            .placeholder(R.drawable.baseline_person_24)  // 加载中显示默认头像
-                            .error(R.drawable.baseline_person_24)        // 加载失败显示默认头像
-                            .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)  // 恢复默认缓存策略
-                            .skipMemoryCache(false)                         // 恢复内存缓存
-                            .into(ivDynamicUserAvatar);
+                @Override
+                public void onFailure(Call<ResponseBody> call, Throwable t) {
+                    isRequesting = false;
+                    Log.e(TAG, "删除请求失败", t);
+                    Snackbar.make(itemView, "删除失败：网络错误", Snackbar.LENGTH_SHORT).show();
                 }
-            }
-        }
-        // 核心：根据点赞状态切换操作（原有逻辑不变）
-        private void toggleLike() {
-            if (isLiked) {
-                cancelLike(); // 已点赞 → 执行取消点赞
-            } else {
-                doLike();     // 未点赞 → 执行点赞
-            }
+            });
         }
 
-        // 1. 检查点赞状态：从后端同步isLiked值（原有逻辑不变）
+
+        // 点赞/取消点赞逻辑（保持不变）
+        private void toggleLike() {
+            if (isLiked) cancelLike();
+            else doLike();
+        }
+
         private void checkLikeStatus() {
             ApiService apiService = ApiClient.getApiService();
             apiService.checkLike(currentUserId, currentShareId).enqueue(new Callback<ResponseBody>() {
@@ -236,9 +324,8 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                 public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                     try {
                         if (response.isSuccessful() && response.body() != null) {
-                            String result = response.body().string();
-                            JSONObject jsonResult = new JSONObject(result);
-                            isLiked = jsonResult.getBoolean("is_liked");
+                            JSONObject json = new JSONObject(response.body().string());
+                            isLiked = json.getBoolean("is_liked");
                             updateLikeButtonUI();
                         }
                     } catch (Exception e) {
@@ -246,7 +333,11 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                     } finally {
                         isRequesting = false;
                         if (response.errorBody() != null) {
-                            response.errorBody().close();
+                            try {
+                                response.errorBody().close();
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -259,7 +350,6 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             });
         }
 
-        // 2. 点赞操作：调用后端/like接口（原有逻辑不变）
         private void doLike() {
             ApiService apiService = ApiClient.getApiService();
             JSONObject json = new JSONObject();
@@ -276,8 +366,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                                 isLiked = true;
                                 updateLikeButtonUI();
                             } else if (response.isSuccessful() && response.body() != null) {
-                                LikeResponse likeResponse = response.body();
-                                int newLikeCount = likeResponse.getLike_count();
+                                int newLikeCount = response.body().getLike_count();
                                 shares.get(currentPosition).setLikeCount(newLikeCount);
                                 isLiked = true;
                                 updateLikeButtonUI();
@@ -289,9 +378,6 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                             e.printStackTrace();
                         } finally {
                             isRequesting = false;
-                            if (response.errorBody() != null) {
-                                response.errorBody().close();
-                            }
                         }
                     }
 
@@ -307,7 +393,6 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             }
         }
 
-        // 3. 取消点赞操作：调用后端/unlike接口（原有逻辑不变）
         private void cancelLike() {
             ApiService apiService = ApiClient.getApiService();
             JSONObject json = new JSONObject();
@@ -324,8 +409,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                                 isLiked = false;
                                 updateLikeButtonUI();
                             } else if (response.isSuccessful() && response.body() != null) {
-                                LikeResponse likeResponse = response.body();
-                                int newLikeCount = likeResponse.getLike_count();
+                                int newLikeCount = response.body().getLike_count();
                                 shares.get(currentPosition).setLikeCount(newLikeCount);
                                 isLiked = false;
                                 updateLikeButtonUI();
@@ -337,9 +421,6 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
                             e.printStackTrace();
                         } finally {
                             isRequesting = false;
-                            if (response.errorBody() != null) {
-                                response.errorBody().close();
-                            }
                         }
                     }
 
@@ -355,42 +436,85 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             }
         }
 
-        // 4. 更新点赞按钮UI（原有逻辑不变）
         private void updateLikeButtonUI() {
+            Drawable drawable;
+            int textColor;
             if (isLiked) {
-                // 已点赞状态：红色实心爱心 + 红色文字
-                Drawable favoriteDrawable = ContextCompat.getDrawable(mActivity, R.drawable.baseline_favorite_24);
-                if (favoriteDrawable != null) {
-                    favoriteDrawable.setColorFilter(
-                            ContextCompat.getColor(mActivity, android.R.color.holo_red_dark),
-                            PorterDuff.Mode.SRC_IN
-                    );
-                    btnLike.setCompoundDrawablesWithIntrinsicBounds(favoriteDrawable, null, null, null);
-                }
-                btnLike.setTextColor(ContextCompat.getColor(mActivity, android.R.color.holo_red_dark));
+                drawable = ContextCompat.getDrawable(mActivity, R.drawable.baseline_favorite_24);
+                textColor = ContextCompat.getColor(mActivity, android.R.color.holo_red_dark);
             } else {
-                // 未点赞状态：灰色边框爱心 + 灰色文字
-                Drawable favoriteBorderDrawable = ContextCompat.getDrawable(mActivity, R.drawable.baseline_favorite_border_24);
-                if (favoriteBorderDrawable != null) {
-                    favoriteBorderDrawable.setColorFilter(
-                            ContextCompat.getColor(mActivity, android.R.color.darker_gray),
-                            PorterDuff.Mode.SRC_IN
-                    );
-                    btnLike.setCompoundDrawablesWithIntrinsicBounds(favoriteBorderDrawable, null, null, null);
-                }
-                btnLike.setTextColor(ContextCompat.getColor(mActivity, android.R.color.darker_gray));
+                drawable = ContextCompat.getDrawable(mActivity, R.drawable.baseline_favorite_border_24);
+                textColor = ContextCompat.getColor(mActivity, android.R.color.darker_gray);
             }
+            if (drawable != null) {
+                drawable.setColorFilter(textColor, PorterDuff.Mode.SRC_IN);
+                btnLike.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null);
+            }
+            btnLike.setTextColor(textColor);
             btnLike.setText(String.valueOf(shares.get(currentPosition).getLikeCount()));
         }
+    }
 
-        // 保留Snackbar方法（不调用，避免弹窗）
-        private void showSnackbar(String message) {
-            if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) {
-                return;
-            }
-            View rootView = mActivity.findViewById(android.R.id.content);
-            if (rootView != null) {
-                Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT).show();
+    // 图片适配器（保持不变）
+    private static class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
+        private Activity activity;
+        private List<String> imageUrls = new ArrayList<>();
+
+        public ImageAdapter(Activity activity, List<String> imageUrls) {
+            this.activity = activity;
+            this.imageUrls = imageUrls != null ? imageUrls : new ArrayList<>();
+        }
+
+        @NonNull
+        @Override
+        public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_image, parent, false);
+            return new ImageViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
+            if (position >= imageUrls.size()) return;
+            final String imageUrl = !imageUrls.get(position).startsWith("http")
+                    ? "http://10.34.2.227:5190" + imageUrls.get(position)
+                    : imageUrls.get(position);
+
+            RequestOptions options = new RequestOptions()
+                    .centerCrop()
+                    .placeholder(R.drawable.ic_launcher_background)
+                    .error(R.drawable.baseline_broken_image_24)
+                    .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC)
+                    .timeout(15000);
+
+            Glide.with(activity)
+                    .load(imageUrl)
+                    .apply(options)
+                    .listener(new com.bumptech.glide.request.RequestListener<Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(@Nullable com.bumptech.glide.load.engine.GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                            Log.e(TAG, "加载图片失败：" + imageUrl, e);
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, com.bumptech.glide.load.DataSource dataSource, boolean isFirstResource) {
+                            return false;
+                        }
+                    })
+                    .into(holder.ivImage);
+        }
+
+        @Override
+        public int getItemCount() {
+            return imageUrls.size();
+        }
+
+        static class ImageViewHolder extends RecyclerView.ViewHolder {
+            ImageView ivImage;
+
+            public ImageViewHolder(View itemView) {
+                super(itemView);
+                ivImage = itemView.findViewById(R.id.iv_image);
             }
         }
     }
