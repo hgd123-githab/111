@@ -12,12 +12,15 @@ public class Share {
     private List<String> images;
     private String name;
 
+<<<<<<< HEAD
+=======
     // 关键修改：使用@SerializedName匹配后端返回的user_avatar字段
     @SerializedName("user_avatar")
     private String avatarUrl;
 
     @SerializedName("like_count")
     private int likeCount;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 
     // 空构造函数（必须保留，Gson解析需要）
     public Share() {}
@@ -30,9 +33,13 @@ public class Share {
         this.content = content;
         this.create_time = create_time;
         this.images = images;
+<<<<<<< HEAD
+        this.name = name;
+=======
         this.likeCount = likeCount;
         this.name = name;
         this.avatarUrl = avatarUrl;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
     }
 
     // 头像URL的getter和setter方法
@@ -92,6 +99,8 @@ public class Share {
     public void setName(String name) {
         this.name = name;
     }
+<<<<<<< HEAD
+=======
 
     public int getLikeCount() {
         return likeCount;
@@ -100,4 +109,5 @@ public class Share {
     public void setLikeCount(int likeCount) {
         this.likeCount = likeCount;
     }
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 }

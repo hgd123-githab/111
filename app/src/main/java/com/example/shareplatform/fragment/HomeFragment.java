@@ -1,9 +1,13 @@
 package com.example.shareplatform.fragment;
 
+<<<<<<< HEAD
+import android.content.Intent;
+=======
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,8 +19,11 @@ import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+<<<<<<< HEAD
+=======
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.lifecycle.Observer;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,8 +32,12 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
 import com.example.shareplatform.R;
+<<<<<<< HEAD
+import com.example.shareplatform.activity.Show;
+=======
 import com.example.shareplatform.activity.PersonalInformation;
 import com.example.shareplatform.activity.Personshow;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 import com.example.shareplatform.adapter.ShareAdapter;
 import com.example.shareplatform.model.Share;
 import com.example.shareplatform.util.Resource;
@@ -82,8 +93,33 @@ public class HomeFragment extends Fragment {
         rvShares.setHasFixedSize(true);
     }
 
+<<<<<<< HEAD
+    private void setupRecyclerView() {
+        recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
+        shareAdapter = new ShareAdapter();
+        //更改
+        // 设置item点击事件
+        shareAdapter.setOnShareItemClickListener(share -> {
+            // 跳转到详情页ShowActivity
+            Intent intent = new Intent(requireContext(), Show.class);
+            // 传递分享数据到详情页
+            intent.putExtra("share_id", share.getSid());
+            intent.putExtra("content", share.getContent());
+            intent.putExtra("uid", share.getUid());
+            intent.putExtra("create_time", share.getCreate_time());
+            // 传递图片列表
+            intent.putStringArrayListExtra("images", new ArrayList<>(share.getImages()));
+            startActivity(intent);
+        });
+        //更改
+        recyclerView.setAdapter(shareAdapter);
+    }
+
+    private void loadData() {
+=======
     private void initViewModels() {
         authViewModel = new ViewModelProvider(this).get(AuthViewModel.class);
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
         shareViewModel = new ViewModelProvider(this).get(ShareViewModel.class);
     }
 
@@ -242,4 +278,5 @@ public class HomeFragment extends Fragment {
             isShareDeletedReceiverRegistered = false;
         }
     }
+
 }

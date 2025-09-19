@@ -28,7 +28,13 @@
         <activity
             android:name=".activity.PersonalInformation"
             android:exported="false" />
+<<<<<<< HEAD
+        <activity
+            android:name=".activity.Show"
+            android:exported="false" />
+=======
 
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
         <activity
             android:name=".activity.ShareActivity"
             android:exported="false" />

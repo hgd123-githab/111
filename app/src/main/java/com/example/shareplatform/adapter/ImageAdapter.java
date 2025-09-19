@@ -21,11 +21,15 @@ import java.util.List;
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private List<String> imageUrls;
     private Context context;
+<<<<<<< HEAD
+    private static final String BASE_URL = "http://10.34.86.144:5190"; // 替换为实际服务器地址
+=======
     private RequestOptions glideOptions = new RequestOptions()
             .diskCacheStrategy(DiskCacheStrategy.ALL)
             .placeholder(R.drawable.ic_launcher_background)
             .error(R.drawable.ic_launcher_background)
             .override(300, 300);
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 
     public ImageAdapter(Context context, List<String> imageUrls) {
         this.context = context;

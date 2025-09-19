@@ -11,9 +11,13 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+<<<<<<< HEAD
+
+=======
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,6 +38,26 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
+<<<<<<< HEAD
+
+
+// ShareAdapter.java - 分享列表适配器
+public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHolder> {
+    private List<Share> shares;
+
+//更改
+private OnShareItemClickListener listener;
+    public interface OnShareItemClickListener {
+        void onShareItemClick(Share share);
+    }
+    public void setOnShareItemClickListener(OnShareItemClickListener listener) {
+        this.listener = listener;
+    }
+
+//更改
+    public ShareAdapter(List<Share> shares) {
+        this.shares = shares;
+=======
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -58,6 +82,7 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
     // 回调接口
     public interface OnLikeStatusChangeListener {
         void onLikeUpdated(int position);
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
     }
 
     public interface OnShareDeleteListener {
@@ -88,7 +113,18 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
     public void onBindViewHolder(@NonNull ShareViewHolder holder, int position) {
         if (position >= shares.size()) return;
         Share share = shares.get(position);
+<<<<<<< HEAD
+       holder.bind(share);
+        //更改
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onShareItemClick(share);
+            }
+        });
+        //更改
+=======
         holder.bind(share, position);
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
     }
 
     @Override
@@ -166,9 +202,16 @@ public class ShareAdapter extends RecyclerView.Adapter<ShareAdapter.ShareViewHol
             });
         }
 
+<<<<<<< HEAD
+        public void bind(Share share) {
+            usernameTv.setText(share.getName());
+            contentTv.setText(share.getContent());
+            timeTv.setText(share.getCreate_time());
+=======
         public void bind(Share share, int position) {
             currentShareId = share.getSid();
             currentPosition = position;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 
             // 基础数据绑定
             tvUsername.setText(share.getName() != null ? share.getName() : "未知用户");

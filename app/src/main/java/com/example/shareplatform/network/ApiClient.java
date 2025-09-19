@@ -15,8 +15,15 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ApiClient {
+<<<<<<< HEAD
+    private static final String BASE_URL = "http://10.34.86.144:5190"; // 关键：设置Flask服务器地址
+    private static final int TIMEOUT = 30; // 超时时间（秒）
+    private static Retrofit retrofit = null;
+    private static OkHttpClient client = null;
+=======
     private static final String BASE_URL = "http://10.34.2.227:5190/";
     private static ApiService apiService;
+>>>>>>> b4455be20792b16ee6381fb281a2b5bf92670a3b
 
     public static ApiService getApiService() {
         if (apiService == null) {
